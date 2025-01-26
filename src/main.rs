@@ -7,11 +7,8 @@ use std::env;
 
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
     match serde_bencode::from_str(encoded_value) {
-        Ok(v) => {
-            println!("{}", v);
-            serde_json::Value::String(v)
-        }
-        Err(e) => serde_json::Value::String(e.to_string()),
+        Ok(v) => serde_json::Value::String(v),
+        Err(_) => serde_json::Value::String("[]".to_string()),
     }
     // // If encoded_value starts with a digit, it's a number
     // let mut chars = encoded_value.chars().into_iter().peekable();
