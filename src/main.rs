@@ -44,7 +44,7 @@ fn convert(value: serde_bencode::value::Value) -> anyhow::Result<serde_json::Val
 fn decode_file(file_path: &str) -> anyhow::Result<serde_json::Value> {
     let file = std::fs::read(file_path);
     match file {
-        Ok(v) => decode_bencoded_value(&String::from_utf8(v).unwrap()),
+        Ok(v) => convert(serde_bencode::value::Value::Bytes(v.to_vec())),
         Err(e) => panic!("{}", e),
     }
 }
