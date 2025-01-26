@@ -11,7 +11,10 @@ fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
             println!("{}", v);
             serde_json::Value::String(v)
         }
-        Err(e) => panic!("{}", e),
+        Err(e) => {
+            println!("{}", e);
+            panic!("{}", e)
+        }
     }
     // // If encoded_value starts with a digit, it's a number
     // let mut chars = encoded_value.chars().into_iter().peekable();
