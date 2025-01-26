@@ -1,4 +1,4 @@
-use serde_bencode::de;
+use serde_bencode;
 use serde_json::{self};
 use std::env;
 
@@ -6,7 +6,7 @@ use std::env;
 // use serde_bencode
 
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    match de::from_str(encoded_value) {
+    match serde_bencode::from_str(encoded_value) {
         Ok(v) => {
             println!("{}", v);
             serde_json::Value::String(v)
