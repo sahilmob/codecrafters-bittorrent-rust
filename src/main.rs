@@ -1,5 +1,5 @@
 use serde_bencode::de;
-use serde_json::{self, Number};
+use serde_json::{self};
 use std::env;
 
 // Available if you need it!
