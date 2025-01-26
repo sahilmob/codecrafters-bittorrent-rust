@@ -7,7 +7,10 @@ use std::env;
 
 #[allow(dead_code)]
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    de::from_str(encoded_value).unwrap()
+    match de::from_str(encoded_value) {
+        Ok(v) => v,
+        Err(e) => panic!("{}", e),
+    }
     // // If encoded_value starts with a digit, it's a number
     // let mut chars = encoded_value.chars().into_iter().peekable();
     // let next_token = chars.peek().unwrap();
