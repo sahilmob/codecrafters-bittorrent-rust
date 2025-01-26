@@ -41,6 +41,14 @@ fn convert(value: serde_bencode::value::Value) -> anyhow::Result<serde_json::Val
 }
 // Usage: your_bittorrent.sh decode "<encoded_value>"
 
+fn decode_file(file_path: &str) -> anyhow::Result<serde_json::Value> {
+    let file = std::fs::read(file_path);
+    match file {
+        Ok(v) => convert(serde_bencode::value::Value::Bytes(v)),
+        Err(e) => panic!("{}", e),
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
     let command = &args[1];
@@ -48,6 +56,10 @@ fn main() -> anyhow::Result<()> {
         // Uncomment this block to pass the first stage
         let encoded_value = &args[2];
         let decoded_value = decode_bencoded_value(encoded_value)?;
+        println!("{}", decoded_value.to_string());
+    } else if command == "info" {
+        let file_path = &args[2];
+        let decoded_value = decode_file(file_path)?;
         println!("{}", decoded_value.to_string());
     } else {
         println!("unknown command: {}", args[1])
