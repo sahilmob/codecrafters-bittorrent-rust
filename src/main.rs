@@ -1,5 +1,6 @@
+use clap::builder::Str;
 use serde_json::{self};
-use std::env;
+use std::{collections::HashMap, env};
 
 // Available if you need it!
 // use serde_bencode
@@ -24,9 +25,21 @@ fn convert(value: serde_bencode::value::Value) -> anyhow::Result<serde_json::Val
                 .collect::<anyhow::Result<Vec<serde_json::Value>>>()?;
             Ok(serde_json::Value::Array(array))
         }
-        _ => {
-            panic!("Unhandled encoded value: {:?}", value)
-        }
+        serde_bencode::value::Value::Dict(d) => {
+            let mut dict: serde_json::Map<std::string::String, serde_json::Value> =
+                serde_json::Map::new();
+
+            d.iter().for_each(|(k, v)| {
+                dict.insert(
+                    String::from_utf8(k.to_vec()).unwrap(),
+                    convert(v.clone()).unwrap(),
+                );
+            });
+
+            Ok(serde_json::Value::Object(dict))
+        } // _ => {
+          //     panic!("Unhandled encoded value: {:?}", value)
+          // }
     }
 }
 // Usage: your_bittorrent.sh decode "<encoded_value>"
