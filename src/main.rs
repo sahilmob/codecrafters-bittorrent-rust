@@ -7,7 +7,7 @@ use std::env;
 
 #[allow(dead_code)]
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    match de::from_str(encoded_value) {
+    match de::from_bytes(encoded_value.as_bytes()) {
         Ok(v) => serde_json::Value::String(v),
         Err(e) => panic!("{}", e),
     }
