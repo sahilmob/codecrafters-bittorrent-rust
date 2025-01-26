@@ -6,8 +6,11 @@ use std::env;
 // use serde_bencode
 
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    match de::from_bytes(encoded_value.as_bytes()) {
-        Ok(v) => serde_json::Value::String(v),
+    match de::from_str(encoded_value) {
+        Ok(v) => {
+            println!("{}", v);
+            serde_json::Value::String(v)
+        }
         Err(e) => panic!("{}", e),
     }
     // // If encoded_value starts with a digit, it's a number
