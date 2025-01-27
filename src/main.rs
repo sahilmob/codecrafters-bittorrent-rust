@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use serde_json;
+use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, path::PathBuf};
 // Available if you need it!
 // use serde_bencode
@@ -55,6 +56,7 @@ struct TorrentInfo {
 struct Torrent {
     announce: reqwest::Url,
     info: TorrentInfo,
+    info_hash: [u8; 20],
 }
 
 fn extract_string(
@@ -115,14 +117,20 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
+            let info = TorrentInfo {
+                length: extract_int("length", &info)?,
+                name: extract_string("name", &info)?,
+                piece_length: extract_int("piece length", &info)?,
+                pieces: extract_bytes("pieces", &info)?,
+            };
+            let mut hasher = Sha1::new();
+            hasher.update(b"hello world");
+            let info_hash = hasher.finalize();
+
             Ok(Torrent {
+                info,
+                info_hash: info_hash.into(),
                 announce: reqwest::Url::parse(announce.as_str())?,
-                info: TorrentInfo {
-                    length: extract_int("length", &info)?,
-                    name: extract_string("name", &info)?,
-                    piece_length: extract_int("piece length", &info)?,
-                    pieces: extract_bytes("pieces", &info)?,
-                },
             })
         }
         _ => Err(anyhow!("Incorrect format, required dict")),
