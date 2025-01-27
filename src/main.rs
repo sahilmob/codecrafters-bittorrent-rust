@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, path::PathBuf};
@@ -47,16 +48,18 @@ fn convert(value: serde_bencode::value::Value) -> anyhow::Result<serde_json::Val
 //     name: suggested name to save the file / directory as
 //     piece length: number of bytes in each piece
 //     pieces: concatenated SHA-1 hashes of each piece
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct TorrentInfo {
     length: i64,
     name: String,
     piece_length: i64,
     pieces: Vec<u8>,
 }
+
 struct Torrent {
     announce: reqwest::Url,
     info: TorrentInfo,
-    info_hash: [u8; 20],
 }
 
 fn extract_string(
@@ -123,13 +126,9 @@ where
                 piece_length: extract_int("piece length", &info)?,
                 pieces: extract_bytes("pieces", &info)?,
             };
-            let mut hasher = Sha1::new();
-            hasher.update(b"hello world");
-            let info_hash = hasher.finalize();
 
             Ok(Torrent {
                 info,
-                info_hash: info_hash.into(),
                 announce: reqwest::Url::parse(announce.as_str())?,
             })
         }
@@ -150,10 +149,9 @@ fn main() -> anyhow::Result<()> {
         let torrent = parse_torrent_file(file_name)?;
         println!("Tracker URL: {}", torrent.announce);
         println!("Length: {}", torrent.info.length);
-        println!(
-            "Info Hash: {}",
-            String::from_utf8(torrent.info_hash.to_vec()).unwrap()
-        );
+        let info = torrent.info;
+        let hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info)?));
+        println!("Info Hash: {hash}");
     } else {
         println!("unknown command: {}", args[1])
     }
