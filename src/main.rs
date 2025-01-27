@@ -127,8 +127,6 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
-            // let info_for_hash = d.get(b"info".as_ref());
-            // let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info_for_hash)?));
             let info_hash = get_info_hash(&d)?;
             Ok(Torrent {
                 info: TorrentInfo {
