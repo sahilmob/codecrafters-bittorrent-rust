@@ -1,4 +1,5 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Ok};
+use clap::builder::Str;
 use serde_json;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, path::PathBuf};
@@ -109,6 +110,10 @@ fn extract_int(
         .ok_or(anyhow!("Missing field: {}", key))
 }
 
+fn get_info_hash(d: &HashMap<Vec<u8>, serde_bencode::value::Value>) -> anyhow::Result<String> {
+    Ok(hex::encode(Sha1::digest(serde_bencode::to_bytes(d)?)))
+}
+
 fn parse_torrent_file<T>(file_path: T) -> anyhow::Result<Torrent>
 where
     T: Into<PathBuf>,
@@ -119,8 +124,7 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
-            let info_for_hash = d.get(b"info".as_ref());
-            let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info_for_hash)?));
+            let info_hash = get_info_hash(&info)?;
             Ok(Torrent {
                 info: TorrentInfo {
                     length: extract_int("length", &info)?,
