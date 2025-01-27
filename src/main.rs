@@ -150,6 +150,10 @@ fn main() -> anyhow::Result<()> {
         let torrent = parse_torrent_file(file_name)?;
         println!("Tracker URL: {}", torrent.announce);
         println!("Length: {}", torrent.info.length);
+        println!(
+            "Info Hash: {}",
+            String::from_utf8(torrent.info_hash.to_vec()).unwrap()
+        );
     } else {
         println!("unknown command: {}", args[1])
     }
