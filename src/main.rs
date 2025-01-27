@@ -111,7 +111,10 @@ fn extract_int(
 }
 
 fn get_info_hash(d: &HashMap<Vec<u8>, serde_bencode::value::Value>) -> anyhow::Result<String> {
-    Ok(hex::encode(Sha1::digest(serde_bencode::to_bytes(d)?)))
+    match d.get(b"info".as_ref()) {
+        Some(v) => Ok(hex::encode(Sha1::digest(serde_bencode::to_bytes(v)?))),
+        None => Err(anyhow!("Unable to hash info")),
+    }
 }
 
 fn parse_torrent_file<T>(file_path: T) -> anyhow::Result<Torrent>
@@ -124,7 +127,9 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
-            let info_hash = get_info_hash(&info)?;
+            // let info_for_hash = d.get(b"info".as_ref());
+            // let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info_for_hash)?));
+            let info_hash = get_info_hash(&d)?;
             Ok(Torrent {
                 info: TorrentInfo {
                     length: extract_int("length", &info)?,
