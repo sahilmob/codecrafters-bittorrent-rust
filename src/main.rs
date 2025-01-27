@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use serde::{Deserialize, Serialize};
 use serde_json;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, env, path::PathBuf};
@@ -49,7 +48,6 @@ fn convert(value: serde_bencode::value::Value) -> anyhow::Result<serde_json::Val
 //     piece length: number of bytes in each piece
 //     pieces: concatenated SHA-1 hashes of each piece
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
 struct TorrentInfo {
     length: i64,
     name: String,
@@ -60,6 +58,7 @@ struct TorrentInfo {
 struct Torrent {
     announce: reqwest::Url,
     info: TorrentInfo,
+    info_hash: String,
 }
 
 fn extract_string(
@@ -120,16 +119,16 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
-            let info = TorrentInfo {
-                length: extract_int("length", &info)?,
-                name: extract_string("name", &info)?,
-                piece_length: extract_int("piece length", &info)?,
-                pieces: extract_bytes("pieces", &info)?,
-            };
-
+            let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info)?));
             Ok(Torrent {
-                info,
+                info: TorrentInfo {
+                    length: extract_int("length", &info)?,
+                    name: extract_string("name", &info)?,
+                    piece_length: extract_int("piece length", &info)?,
+                    pieces: extract_bytes("pieces", &info)?,
+                },
                 announce: reqwest::Url::parse(announce.as_str())?,
+                info_hash,
             })
         }
         _ => Err(anyhow!("Incorrect format, required dict")),
@@ -149,9 +148,8 @@ fn main() -> anyhow::Result<()> {
         let torrent = parse_torrent_file(file_name)?;
         println!("Tracker URL: {}", torrent.announce);
         println!("Length: {}", torrent.info.length);
-        let info = torrent.info;
-        let hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info)?));
-        println!("Info Hash: {hash}");
+
+        println!("Info Hash: {}", torrent.info_hash);
     } else {
         println!("unknown command: {}", args[1])
     }
