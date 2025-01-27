@@ -119,7 +119,8 @@ where
         serde_bencode::value::Value::Dict(d) => {
             let announce = extract_string("announce", &d)?;
             let info = extract_dict("info", &d)?;
-            let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info)?));
+            let info_for_hash = d.get(b"info".as_ref());
+            let info_hash = hex::encode(Sha1::digest(serde_bencode::to_bytes(&info_for_hash)?));
             Ok(Torrent {
                 info: TorrentInfo {
                     length: extract_int("length", &info)?,
@@ -148,7 +149,6 @@ fn main() -> anyhow::Result<()> {
         let torrent = parse_torrent_file(file_name)?;
         println!("Tracker URL: {}", torrent.announce);
         println!("Length: {}", torrent.info.length);
-
         println!("Info Hash: {}", torrent.info_hash);
     } else {
         println!("unknown command: {}", args[1])
